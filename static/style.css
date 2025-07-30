@@ -1,0 +1,45 @@
+/* Estilos básicos para o sistema de conferência */
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    overflow: hidden;
+    padding: 0 20px;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.alert {
+    margin-bottom: 15px;
+}
+
+.jumbotron {
+    background-color: #e9ecef;
+    padding: 2rem 1rem;
+    border-radius: .3rem;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+.form-group label {
+    font-weight: bold;
+}
+
+/* Adicionar mais estilos conforme necessário */
+

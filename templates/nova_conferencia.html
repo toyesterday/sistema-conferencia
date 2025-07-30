@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Conferência - Sistema de Conferência{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Nova Conferência de Arte - Pré CTP</h2>
+        <form method="POST" action="{{ url_for("nova_conferencia") }}">
+            <h4>Dados da Ordem de Serviço</h4>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="numero_os">Número da O.S. (*)</label>
+                    <input type="text" class="form-control" id="numero_os" name="numero_os" required>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="nome_cliente_projeto">Nome do Cliente/Projeto</label>
+                    <input type="text" class="form-control" id="nome_cliente_projeto" name="nome_cliente_projeto">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="nome_arquivo_original">Nome do Arquivo Original</label>
+                    <input type="text" class="form-control" id="nome_arquivo_original" name="nome_arquivo_original">
+                </div>
+            </div>
+
+            <hr>
+            <h4>Checklist de Conferência</h4>
+            {% for item in checklist_items %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    {{ item.descricao }}
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Resposta (*)</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="checklist__{{ item.codigo }}" id="checklist__{{ item.codigo }}__conforme" value="Conforme" required>
+                                <label class="form-check-label" for="checklist__{{ item.codigo }}__conforme">Conforme</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="checklist__{{ item.codigo }}" id="checklist__{{ item.codigo }}__nao_conforme" value="Não Conforme">
+                                <label class="form-check-label" for="checklist__{{ item.codigo }}__nao_conforme">Não Conforme</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="checklist__{{ item.codigo }}" id="checklist__{{ item.codigo }}__na" value="N/A">
+                                <label class="form-check-label" for="checklist__{{ item.codigo }}__na">N/A</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checklist_obs__{{ item.codigo }}">Observações:</label>
+                        <textarea class="form-control" id="checklist_obs__{{ item.codigo }}" name="checklist_obs__{{ item.codigo }}" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <hr>
+            <h4>Processos Adicionais</h4>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="montou_boneca">Foi montado boneca?</label>
+                    <select class="form-control" id="montou_boneca" name="montou_boneca">
+                        <option value="">Selecione</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="referencia_cor">Formato de cor para referência?</label>
+                    <select class="form-control" id="referencia_cor" name="referencia_cor">
+                        <option value="">Selecione</option>
+                        <option value="Epson">Epson</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Modelo Físico">Modelo Físico</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="detalhe_referencia_cor">Detalhe da Referência de Cor (se "Outro")</label>
+                    <input type="text" class="form-control" id="detalhe_referencia_cor" name="detalhe_referencia_cor">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="deu_baixa_chapas">Deu baixa nas chapas?</label>
+                     <select class="form-control" id="deu_baixa_chapas" name="deu_baixa_chapas">
+                        <option value="">Selecione</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="fez_apontamento_sistema">Fez apontamento de gravação no sistema?</label>
+                    <select class="form-control" id="fez_apontamento_sistema" name="fez_apontamento_sistema">
+                        <option value="">Selecione</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr>
+            <h4>Observações Gerais da Conferência</h4>
+            <div class="form-group">
+                <label for="observacoes_gerais">Observações Gerais</label>
+                <textarea class="form-control" id="observacoes_gerais" name="observacoes_gerais" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg">Salvar Conferência</button>
+            <a href="{{ url_for("index") }}" class="btn btn-secondary btn-lg">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

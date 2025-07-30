@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Relatório de Conferência - O.S. {{ conferencia.numero_os }}</title>
+    <style>
+        body {
+            font-family: "Noto Sans CJK SC", "WenQuanYi Zen Hei", sans-serif;
+            margin: 20px;
+            font-size: 10pt;
+        }
+        h1, h2, h3, h4 {
+            color: #333;
+            margin-bottom: 0.5em;
+        }
+        h1 { font-size: 18pt; text-align: center; margin-bottom: 1em; }
+        h2 { font-size: 14pt; margin-top: 1.5em; border-bottom: 1px solid #ccc; padding-bottom: 0.2em;}
+        h3 { font-size: 12pt; margin-top: 1em; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .checklist-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dotted #eee;
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 200px; /* Adjust as needed */
+        }
+        .value {
+            display: inline-block;
+        }
+        .observacoes {
+            margin-top: 5px;
+            padding-left: 15px;
+            font-style: italic;
+            color: #555;
+        }
+        .nao-conforme {
+            color: red;
+            font-weight: bold;
+        }
+        .conforme {
+            color: green;
+        }
+        .na {
+            color: #777;
+        }
+        .footer {
+            text-align: center;
+            font-size: 8pt;
+            color: #777;
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relatório de Conferência de Arte - Pré CTP</h1>
+
+    <h2>Dados da Conferência</h2>
+    <table>
+        <tr>
+            <th>Número da O.S.:</th>
+            <td>{{ conferencia.numero_os }}</td>
+        </tr>
+        <tr>
+            <th>Cliente/Projeto:</th>
+            <td>{{ conferencia.nome_cliente_projeto if conferencia.nome_cliente_projeto else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <th>Nome do Arquivo Original:</th>
+            <td>{{ conferencia.nome_arquivo_original if conferencia.nome_arquivo_original else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <th>Responsável:</th>
+            <td>{{ conferencia.responsavel.nome_completo }} ({{ conferencia.responsavel.nome_usuario }})</td>
+        </tr>
+        <tr>
+            <th>Data da Conferência:</th>
+            <td>{{ conferencia.data_fim_conferencia.strftime('%d/%m/%Y %H:%M:%S') if conferencia.data_fim_conferencia else conferencia.data_inicio_conferencia.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        </tr>
+        <tr>
+            <th>Status:</th>
+            <td>{{ conferencia.status_conferencia }}</td>
+        </tr>
+    </table>
+
+    <h2>Checklist de Conferência</h2>
+    {% for item in conferencia.itens_conferencia %}
+    <div class="checklist-item">
+        <p><strong>{{ loop.index }}. {{ item.descricao_item_checklist }}</strong></p>
+        <p>Resposta: 
+            <span class="{% if item.resposta == 'Não Conforme' %}nao-conforme{% elif item.resposta == 'Conforme' %}conforme{% else %}na{% endif %}">
+                {{ item.resposta if item.resposta else 'Não respondido' }}
+            </span>
+        </p>
+        {% if item.observacao_item %}
+        <p class="observacoes">Observações: {{ item.observacao_item }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <h2>Processos Adicionais</h2>
+    <table>
+        <tr>
+            <th>Foi montado boneca?</th>
+            <td>{{ conferencia.processos_adicionais.montou_boneca if conferencia.processos_adicionais and conferencia.processos_adicionais.montou_boneca else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <th>Formato de cor para referência?</th>
+            <td>
+                {{ conferencia.processos_adicionais.referencia_cor if conferencia.processos_adicionais and conferencia.processos_adicionais.referencia_cor else 'N/A' }}
+                {% if conferencia.processos_adicionais and conferencia.processos_adicionais.referencia_cor == 'Outro' and conferencia.processos_adicionais.detalhe_referencia_cor %}
+                    ({{ conferencia.processos_adicionais.detalhe_referencia_cor }})
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Deu baixa nas chapas?</th>
+            <td>{{ conferencia.processos_adicionais.deu_baixa_chapas if conferencia.processos_adicionais and conferencia.processos_adicionais.deu_baixa_chapas else 'N/A' }}</td>
+        </tr>
+        <tr>
+            <th>Fez apontamento de gravação no sistema?</th>
+            <td>{{ conferencia.processos_adicionais.fez_apontamento_sistema if conferencia.processos_adicionais and conferencia.processos_adicionais.fez_apontamento_sistema else 'N/A' }}</td>
+        </tr>
+    </table>
+
+    {% if conferencia.observacoes_gerais %}
+    <h2>Observações Gerais da Conferência</h2>
+    <p>{{ conferencia.observacoes_gerais }}</p>
+    {% endif %}
+
+    <div class="footer"        Gerado em {{ now|datetimeformat("%d/%m/%Y %H:%M:%S") }} por Leonardo Designer.
+    </div>
+
+</body>
+</html>

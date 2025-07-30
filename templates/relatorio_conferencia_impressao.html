@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Conferência - OS {{ conferencia.numero_os }}</title>
+    <style>
+        @media print {
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.5;
+                margin: 0;
+                padding: 20px;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #333;
+                padding-bottom: 10px;
+            }
+            
+            .section {
+                margin-bottom: 20px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                background-color: #f0f0f0;
+                padding: 5px;
+            }
+            
+            .info-row {
+                margin-bottom: 5px;
+            }
+            
+            .info-label {
+                font-weight: bold;
+                display: inline-block;
+                width: 150px;
+            }
+            
+            .conforme {
+                color: green;
+            }
+            
+            .nao-conforme {
+                color: red;
+            }
+            
+            .na {
+                color: gray;
+            }
+            
+            .item-observacao {
+                font-style: italic;
+                margin-left: 20px;
+                font-size: 0.9em;
+            }
+            
+            .footer {
+                margin-top: 30px;
+                text-align: center;
+                font-size: 0.8em;
+                color: #666;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }
+        }
+        
+        /* Estilos para visualização na tela */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+            padding: 5px;
+        }
+        
+        .info-row {
+            margin-bottom: 5px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        
+        .conforme {
+            color: green;
+        }
+        
+        .nao-conforme {
+            color: red;
+        }
+        
+        .na {
+            color: gray;
+        }
+        
+        .item-observacao {
+            font-style: italic;
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .print-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .print-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="no-print">
+            <button class="print-button" onclick="window.print()">Imprimir Relatório</button>
+            <p>Clique no botão acima para imprimir ou salvar como PDF. Use as opções do seu navegador para personalizar a impressão.</p>
+        </div>
+        
+        <div class="header">
+            <h1>Relatório de Conferência</h1>
+            <h2>OS: {{ conferencia.numero_os }}</h2>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Informações Gerais</div>
+            <div class="info-row">
+                <span class="info-label">Número OS:</span> {{ conferencia.numero_os }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cliente/Projeto:</span> {{ conferencia.nome_cliente_projeto }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Arquivo Original:</span> {{ conferencia.nome_arquivo_original }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Data Início:</span> {{ conferencia.data_inicio_conferencia|datetimeformat }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Data Conclusão:</span> {{ conferencia.data_fim_conferencia|datetimeformat }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status:</span> {{ conferencia.status_conferencia }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Responsável:</span> {{ conferencia.responsavel.nome_completo }}
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Itens de Verificação</div>
+            {% for item in conferencia.itens_conferencia %}
+                <div class="info-row">
+                    <span class="info-label">{{ item.descricao_item_checklist }}:</span> 
+                    {% if item.resposta == "Conforme" %}
+                        <span class="conforme">{{ item.resposta }}</span>
+                    {% elif item.resposta == "Não Conforme" %}
+                        <span class="nao-conforme">{{ item.resposta }}</span>
+                    {% else %}
+                        <span class="na">{{ item.resposta }}</span>
+                    {% endif %}
+                </div>
+                {% if item.observacao_item %}
+                    <div class="item-observacao">Obs: {{ item.observacao_item }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        {% if conferencia.processos_adicionais %}
+        <div class="section">
+            <div class="section-title">Processos Adicionais</div>
+            <div class="info-row">
+                <span class="info-label">Montou Boneca:</span> {{ conferencia.processos_adicionais.montou_boneca }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Referência de Cor:</span> {{ conferencia.processos_adicionais.referencia_cor }}
+            </div>
+            {% if conferencia.processos_adicionais.detalhe_referencia_cor %}
+                <div class="info-row">
+                    <span class="info-label">Detalhes:</span> {{ conferencia.processos_adicionais.detalhe_referencia_cor }}
+                </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Baixa de Chapas:</span> {{ conferencia.processos_adicionais.deu_baixa_chapas }}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Apontamento no Sistema:</span> {{ conferencia.processos_adicionais.fez_apontamento_sistema }}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if conferencia.observacoes_gerais %}
+        <div class="section">
+            <div class="section-title">Observações Gerais</div>
+            <div>{{ conferencia.observacoes_gerais }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            Relatório gerado em {{ now|datetimeformat }} | Sistema de Conferência para Pré-Impressão
+        </div>
+    </div>
+</body>
+</html>

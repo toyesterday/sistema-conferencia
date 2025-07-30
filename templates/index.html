@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Página Inicial - Sistema de Conferência{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Bem-vindo ao Sistema de Conferência de Pré-Impressão!</h1>
+    <p class="lead">Utilize este sistema para registrar e acompanhar as conferências de arte para CTP.</p>
+    <hr class="my-4">
+    <p>Você pode iniciar uma nova conferência ou visualizar o histórico de conferências.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('nova_conferencia') }}" role="button">Iniciar Nova Conferência</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Pesquisar por Número da O.S.</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('index') }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="pesquisa_os" placeholder="Digite o número da O.S." value="{{ request.args.get('pesquisa_os', '') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Pesquisar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Histórico de Conferências</h3>
+{% if conferencias %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Número O.S.</th>
+                <th>Cliente/Projeto</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conf in conferencias %}
+            <tr>
+                <td>{{ conf.numero_os }}</td>
+                <td>{{ conf.nome_cliente_projeto }}</td>
+                <td>{{ conf.data_fim_conferencia|datetimeformat if conf.data_fim_conferencia else conf.data_inicio_conferencia|datetimeformat }}</td>
+                <td>
+                    <span class="badge {% if conf.status_conferencia == 'Aprovado' %}badge-success{% elif conf.status_conferencia == 'Reprovado com Pendências' %}badge-danger{% else %}badge-warning{% endif %}">
+                        {{ conf.status_conferencia }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('visualizar_conferencia', id_conferencia=conf.id_conferencia) }}" class="btn btn-sm btn-info">Visualizar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Nenhuma conferência encontrada. {% if request.args.get('pesquisa_os') %}Tente uma pesquisa diferente ou {% endif %}inicie uma nova conferência.
+</div>
+{% endif %}
+{% endblock %}

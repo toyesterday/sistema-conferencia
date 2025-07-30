@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Conferência - Sistema de Conferência{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Iniciar Nova Conferência</h2>
+
+<form method="POST" action="{{ url_for("nova_conferencia") }}">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Informações Básicas
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="numero_os">Número da O.S.</label>
+                    <input type="text" class="form-control" id="numero_os" name="numero_os" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="nome_cliente_projeto">Cliente / Projeto</label>
+                    <input type="text" class="form-control" id="nome_cliente_projeto" name="nome_cliente_projeto">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="nome_arquivo_original">Nome do Arquivo Original</label>
+                <input type="text" class="form-control" id="nome_arquivo_original" name="nome_arquivo_original">
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Checklist de Pré-Impressão
+        </div>
+        <div class="card-body">
+            {% for item in checklist_items %}
+            <div class="form-group border-bottom pb-3 mb-3 {% if 'MODO DE COR' in item.descricao %}modo-cor-item{% elif 'QRCODE' in item.codigo %}qrcode-item{% endif %}">
+                <label class="font-weight-bold d-block {% if 'MODO DE COR' in item.descricao %}modo-cor-label{% elif 'QRCODE' in item.codigo %}qrcode-label{% endif %}">
+                    {% if 'MODO DE COR' in item.descricao %}
+                    <div class="modo-cor-header">
+                        <i class="fas fa-palette modo-cor-icon"></i>
+                        <span>{{ loop.index }}. {{ item.descricao }}</span>
+                    </div>
+                    {% elif 'QRCODE' in item.codigo %}
+                    <div class="qrcode-header">
+                        <i class="fas fa-qrcode qrcode-icon"></i>
+                        <span>{{ loop.index }}. {{ item.descricao }}</span>
+                    </div>
+                    {% else %}
+                    {{ loop.index }}. {{ item.descricao }}
+                    {% endif %}
+                </label>
+                
+                <div class="btn-group btn-group-toggle {% if item.codigo == 'MODO_COR_OS' %}modo-cor-options{% elif 'QRCODE' in item.codigo %}qrcode-options{% endif %}" data-toggle="buttons">
+                    {% if item.codigo == 'MODO_COR_OS' %}
+                    <label class="btn btn-outline-success modo-cor-btn">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="PANTONE" required> PANTONE
+                    </label>
+                    <label class="btn btn-outline-success modo-cor-btn">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="CMYK"> CMYK
+                    </label>
+                    {% elif item.codigo == 'FORMATO_COR_REFERENCIA' %}
+                    <label class="btn btn-outline-secondary">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="EPSON" required> EPSON
+                    </label>
+                    <label class="btn btn-outline-secondary">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="MODELO_FISICO"> MODELO FÍSICO
+                    </label>
+                    {% else %}
+                    <label class="btn btn-outline-success {% if 'MODO DE COR' in item.descricao %}modo-cor-btn{% elif 'QRCODE' in item.codigo %}qrcode-btn{% endif %}">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="Conforme" required> Sim
+                    </label>
+                    <label class="btn btn-outline-danger {% if 'MODO DE COR' in item.descricao %}modo-cor-btn{% elif 'QRCODE' in item.codigo %}qrcode-btn{% endif %}">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="Não Conforme"> Não
+                    </label>
+                    {% if 'QRCODE' not in item.codigo %}
+                    <label class="btn btn-outline-secondary {% if 'MODO DE COR' in item.descricao %}modo-cor-btn{% endif %}">
+                        <input type="radio" name="checklist__{{ item.codigo }}" value="N/A"> N/A
+                    </label>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="mt-2">
+                    <label for="checklist_obs__{{ item.codigo }}" class="sr-only">Observação para {{ item.descricao }}</label>
+                    <input type="text" class="form-control form-control-sm {% if 'MODO DE COR' in item.descricao %}modo-cor-input{% elif 'QRCODE' in item.codigo %}qrcode-input{% endif %}" 
+                           id="checklist_obs__{{ item.codigo }}" 
+                           name="checklist_obs__{{ item.codigo }}" 
+                           placeholder="{% if 'MODO DE COR' in item.descricao %}Especifique o modo de cor (CMYK, Pantone, etc.){% elif 'QRCODE' in item.codigo %}Qual link ele leva?{% else %}Observação (opcional){% endif %}">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Processos Adicionais
+        </div>
+        <div class="card-body">
+
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Montou Boneca?</label>
+                    <div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="montou_boneca" value="Sim"> Sim
+                        </label>
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="montou_boneca" value="Não"> Não
+                        </label>
+                        <label class="btn btn-outline-secondary active">
+                            <input type="radio" name="montou_boneca" value="N/A" checked> N/A
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Verificou Medida da Faca com o Micro?</label>
+                    <div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="verificou_medida_faca" value="Sim"> Sim
+                        </label>
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="verificou_medida_faca" value="Não"> Não
+                        </label>
+                        <label class="btn btn-outline-secondary active">
+                            <input type="radio" name="verificou_medida_faca" value="N/A" checked> N/A
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Fez Apontamento no Sistema?</label>
+                    <div class="btn-group btn-group-toggle d-block" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="fez_apontamento_sistema" value="Sim"> Sim
+                        </label>
+                        <label class="btn btn-outline-secondary">
+                            <input type="radio" name="fez_apontamento_sistema" value="Não"> Não
+                        </label>
+                        <label class="btn btn-outline-secondary active">
+                            <input type="radio" name="fez_apontamento_sistema" value="N/A" checked> N/A
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Observações Gerais
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="observacoes_gerais" class="sr-only">Observações Gerais</label>
+                <textarea class="form-control" id="observacoes_gerais" name="observacoes_gerais" rows="4" placeholder="Adicione aqui quaisquer observações gerais sobre esta conferência..."></textarea>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Salvar Conferência</button>
+        <a href="{{ url_for("index") }}" class="btn btn-secondary btn-lg ml-2">Cancelar</a>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<style>
+/* Estilos específicos para os botões de rádio customizados */
+.btn-group-toggle .btn {
+    border-color: var(--border-color);
+    color: var(--text-subtle);
+    background-color: transparent;
+    margin-right: 5px; /* Espaçamento entre botões */
+}
+
+.btn-group-toggle .btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.btn-group-toggle .btn.active {
+    background-color: var(--primary-green);
+    color: var(--dark-bg);
+    border-color: var(--primary-green);
+}
+
+/* Ajustes para botões de rádio específicos (Conforme/Não Conforme) */
+.btn-group-toggle .btn.btn-outline-success.active {
+    background-color: #28a745; /* Verde Sucesso */
+    border-color: #28a745;
+    color: #fff;
+}
+.btn-group-toggle .btn.btn-outline-danger.active {
+    background-color: #dc3545; /* Vermelho Perigo */
+    border-color: #dc3545;
+    color: #fff;
+}
+.btn-group-toggle .btn.btn-outline-secondary.active {
+    background-color: #6c757d; /* Cinza Secundário */
+    border-color: #6c757d;
+    color: #fff;
+}
+
+/* Remover borda padrão do input radio */
+.btn-group-toggle > .btn input[type="radio"] {
+    position: absolute;
+    clip: rect(0,0,0,0);
+    pointer-events: none;
+}
+
+/* Estilos específicos para o item Modo de Cor */
+.modo-cor-item {
+    background-color: rgba(29, 185, 84, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(29, 185, 84, 0.2) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modo-cor-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: var(--primary-green);
+}
+
+.modo-cor-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.modo-cor-icon {
+    color: var(--primary-green);
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.modo-cor-label {
+    color: var(--primary-green) !important;
+    font-size: 1.05em;
+}
+
+.modo-cor-options {
+    margin-left: 30px;
+}
+
+.modo-cor-btn {
+    font-weight: 600;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+.modo-cor-btn:hover {
+    transform: scale(1.1);
+}
+
+.modo-cor-input {
+    border-color: rgba(29, 185, 84, 0.3);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.modo-cor-input:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
+}
+
+/* Estilos específicos para o item QR Code */
+.qrcode-item {
+    background-color: rgba(255, 193, 7, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 193, 7, 0.2) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.qrcode-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: #ffc107;
+}
+
+.qrcode-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.qrcode-icon {
+    color: #ffc107;
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.qrcode-label {
+    color: #ffc107 !important;
+    font-size: 1.05em;
+}
+
+.qrcode-options {
+    margin-left: 30px;
+}
+
+.qrcode-btn {
+    font-weight: 600;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+.qrcode-btn:hover {
+    transform: scale(1.1);
+}
+
+.qrcode-input {
+    border-color: rgba(255, 193, 7, 0.3);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.qrcode-input:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+</style>
+
+<!-- Adicionar Font Awesome para ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}

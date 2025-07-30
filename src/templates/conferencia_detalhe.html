@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Conferência - OS {{ conferencia.numero_os }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Detalhes da Conferência - OS {{ conferencia.numero_os }}</h2>
+    <div>
+        <a href="{{ url_for("gerar_pdf_conferencia", id_conferencia=conferencia.id_conferencia) }}" class="btn btn-secondary" target="_blank">Gerar Relatório</a>
+        <a href="{{ url_for("index") }}" class="btn btn-secondary ml-2">Voltar para Lista</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        Informações Gerais
+    </div>
+    <div class="card-body">
+        <div class="info-grid">
+            <span class="info-label">Número OS:</span> <span class="info-value">{{ conferencia.numero_os }}</span>
+            <span class="info-label">Cliente/Projeto:</span> <span class="info-value">{{ conferencia.nome_cliente_projeto or "N/A" }}</span>
+            <span class="info-label">Arquivo Original:</span> <span class="info-value">{{ conferencia.nome_arquivo_original or "N/A" }}</span>
+            <span class="info-label">Data Início:</span> <span class="info-value">{{ conferencia.data_inicio_conferencia|datetimeformat }}</span>
+            <span class="info-label">Data Conclusão:</span> <span class="info-value">{{ conferencia.data_fim_conferencia|datetimeformat if conferencia.data_fim_conferencia else "Em Andamento" }}</span>
+            <span class="info-label">Status Conferência:</span> 
+            <span class="info-value">
+                <span class="status-badge 
+                    {% if conferencia.status_conferencia == "Aprovado" %}status-aprovado
+                    {% elif conferencia.status_conferencia == "Reprovado com Pendências" %}status-reprovado
+                    {% else %}status-pendente{% endif %}">
+                    {{ conferencia.status_conferencia }}
+                </span>
+            </span>
+            <span class="info-label">Responsável:</span> <span class="info-value">{{ conferencia.responsavel.nome_completo }}</span>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        Itens de Verificação
+    </div>
+    <div class="card-body">
+        {% for item in conferencia.itens_conferencia %}
+            <div class="checklist-item {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-item{% endif %}">
+                <div class="checklist-description {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-description{% endif %}">
+                    {% if 'MODO DE COR' in item.descricao_item_checklist %}
+                    <div class="modo-cor-header">
+                        <i class="fas fa-palette modo-cor-icon"></i>
+                        <span>{{ loop.index }}. {{ item.descricao_item_checklist }}</span>
+                    </div>
+                    {% else %}
+                    {{ loop.index }}. {{ item.descricao_item_checklist }}
+                    {% endif %}
+                </div>
+                <div class="info-value">
+                    Resposta: 
+                    <span class="status-badge {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-badge{% endif %}
+                        {% if item.resposta == "Conforme" %}status-conforme
+                        {% elif item.resposta == "Não Conforme" %}status-nao-conforme
+                        {% else %}status-na{% endif %}">
+                        {{ item.resposta or "N/A" }}
+                    </span>
+                </div>
+                {% if item.observacao_item %}
+                    <div class="item-observacao {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-observacao{% endif %}">
+                        {% if 'MODO DE COR' in item.descricao_item_checklist %}
+                        <strong>Modo de cor utilizado:</strong> {{ item.observacao_item }}
+                        {% else %}
+                        Obs: {{ item.observacao_item }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if conferencia.processos_adicionais %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        Processos Adicionais
+    </div>
+    <div class="card-body">
+        <div class="info-grid">
+            <span class="info-label">Montou Boneca:</span> <span class="info-value">{{ conferencia.processos_adicionais.montou_boneca or "N/A" }}</span>
+            <span class="info-label">Verificou Medida da Faca:</span> <span class="info-value">{{ conferencia.processos_adicionais.verificou_medida_faca or "N/A" }}</span>
+            <span class="info-label">Referência de Cor:</span> 
+            <span class="info-value">
+                {{ conferencia.processos_adicionais.referencia_cor or "N/A" }}
+                {% if conferencia.processos_adicionais.referencia_cor == "Outro" and conferencia.processos_adicionais.detalhe_referencia_cor %}
+                    ({{ conferencia.processos_adicionais.detalhe_referencia_cor }})
+                {% endif %}
+            </span>
+            <span class="info-label">Baixa de Chapas:</span> <span class="info-value">{{ conferencia.processos_adicionais.deu_baixa_chapas or "N/A" }}</span>
+            <span class="info-label">Apontamento no Sistema:</span> <span class="info-value">{{ conferencia.processos_adicionais.fez_apontamento_sistema or "N/A" }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if conferencia.observacoes_gerais %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        Observações Gerais
+    </div>
+    <div class="card-body">
+        <div class="info-value">{{ conferencia.observacoes_gerais }}</div>
+    </div>
+</div>
+{% endif %}
+
+
+
+{% endblock %}
+
+{% block scripts_extra %}
+<style>
+/* Estilos específicos para esta página, se necessário */
+.info-grid {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 8px 15px; /* row-gap column-gap */
+    margin-bottom: 10px;
+}
+
+.info-label {
+    font-weight: 600; /* SemiBold */
+    color: var(--text-subtle);
+}
+
+.info-value {
+    word-break: break-word;
+    color: var(--text-light);
+}
+
+.checklist-item {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color);
+}
+.checklist-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.checklist-description {
+    font-weight: 600; /* SemiBold */
+    margin-bottom: 5px;
+    color: var(--text-light);
+}
+
+.item-observacao {
+    font-style: italic;
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: var(--text-subtle);
+    margin-top: 5px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border-color);
+}
+
+/* Badges de Status */
+.status-badge {
+    padding: 3px 10px;
+    border-radius: 50px; /* Arredondado */
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--dark-bg);
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-aprovado, .status-conforme {
+    background-color: var(--primary-green);
+}
+
+.status-reprovado, .status-nao-conforme {
+    background-color: #dc3545; /* Vermelho */
+    color: var(--text-light);
+}
+
+.status-pendente, .status-na {
+    background-color: #ffc107; /* Amarelo */
+}
+
+.status-enviado {
+    background-color: #17a2b8; /* Azul Info */
+    color: var(--text-light);
+}
+
+/* Estilos específicos para o item Modo de Cor */
+.modo-cor-item {
+    background-color: rgba(29, 185, 84, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(29, 185, 84, 0.2) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modo-cor-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: var(--primary-green);
+}
+
+.modo-cor-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.modo-cor-icon {
+    color: var(--primary-green);
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.modo-cor-description {
+    color: var(--primary-green) !important;
+    font-size: 1.05em;
+}
+
+.modo-cor-badge {
+    transform: scale(1.1);
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.modo-cor-observacao {
+    border-left: 3px solid var(--primary-green) !important;
+    background-color: rgba(29, 185, 84, 0.05);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    font-style: normal;
+}
+
+</style>
+
+<!-- Adicionar Font Awesome para ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}

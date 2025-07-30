@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Conferência - OS {{ conferencia.numero_os }}</title>
+    <!-- Google Font Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Variáveis de Cor - PDF Colorido --- */
+        :root {
+            --primary-green: #1DB954;
+            --secondary-teal: #20c997;
+            --accent-blue: #0d6efd;
+            --dark-text: #212529;
+            --medium-text: #495057;
+            --light-text: #f8f9fa;
+            --subtle-gray-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --white: #ffffff;
+            
+            --status-success: #198754; /* Darker Green */
+            --status-danger: #dc3545;
+            --status-warning: #ffc107;
+            --status-info: #0d6efd;
+            --status-secondary: #6c757d;
+        }
+
+        body {
+            font-family: "Poppins", Arial, sans-serif;
+            line-height: 1.5; 
+            margin: 0;
+            padding: 0;
+            background-color: var(--subtle-gray-bg); 
+            color: var(--dark-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 8.5in; 
+            min-height: 10in; 
+            margin: 20px auto;
+            background-color: var(--white);
+            padding: 30px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .report-content {
+            flex-grow: 1;
+        }
+
+        /* --- Cabeçalho --- */
+        .header {
+            text-align: left;
+            margin-bottom: 25px; /* Reduzido */
+            padding-bottom: 10px; /* Reduzido */
+            border-bottom: 3px solid var(--primary-green);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .header .title-block h1 {
+            font-size: 22px; /* Reduzido */
+            font-weight: 700;
+            color: var(--primary-green);
+            margin: 0;
+        }
+        .header .title-block h2 {
+            font-size: 16px; /* Reduzido */
+            color: var(--medium-text);
+            font-weight: 500;
+            margin: 3px 0 0 0;
+        }
+        .header .logo-placeholder {
+            font-weight: 600;
+            color: var(--medium-text);
+        }
+
+        /* --- Seções --- */
+        .section {
+            margin-bottom: 15px; /* Reduzido */
+            background-color: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            overflow: hidden; 
+            page-break-inside: avoid; 
+        }
+
+        .section-title {
+            font-size: 13px; /* Reduzido */
+            font-weight: 600;
+            margin: 0;
+            color: var(--white);
+            background-color: var(--secondary-teal); 
+            padding: 6px 10px; /* Reduzido */
+            border-bottom: 1px solid var(--border-color);
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+        }
+        
+        .section-content {
+             padding: 10px; /* Reduzido */
+        }
+
+        /* --- Grid de Informações --- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr; /* Coluna label reduzida */
+            gap: 4px 10px; /* Reduzido */
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--medium-text);
+            text-align: right;
+            font-size: 0.8em; /* Reduzido */
+        }
+
+        .info-value {
+            word-break: break-word;
+            color: var(--dark-text);
+            font-size: 0.8em; /* Reduzido */
+        }
+        .info-value small {
+             font-size: 0.85em;
+        }
+
+        /* --- Badges de Status --- */
+        .status-badge {
+            padding: 2px 8px; /* Ajustado */
+            border-radius: 12px; 
+            font-size: 0.7em; /* Reduzido */
+            font-weight: 600;
+            color: var(--white);
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            line-height: 1.3; /* Ajuste fino */
+        }
+
+        .status-aprovado, .status-conforme {
+            background-color: var(--status-success);
+            border-color: var(--status-success);
+        }
+
+        .status-reprovado, .status-nao-conforme {
+            background-color: var(--status-danger);
+            border-color: var(--status-danger);
+        }
+
+        .status-pendente, .status-na {
+            background-color: var(--status-warning);
+            border-color: var(--status-warning);
+            color: var(--dark-text); 
+        }
+        
+        .status-enviado {
+            background-color: var(--status-info);
+            border-color: var(--status-info);
+        }
+
+        /* --- Checklist --- */
+        .checklist-item {
+            margin-bottom: 6px; /* Reduzido */
+            padding-bottom: 6px; /* Reduzido */
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            page-break-inside: avoid; 
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .checklist-description {
+            font-weight: 500;
+            flex-grow: 1;
+            margin-right: 8px; /* Reduzido */
+            font-size: 0.8em; /* Reduzido */
+            line-height: 1.3; /* Ajuste fino */
+        }
+        .checklist-description .item-index {
+            font-weight: 600;
+            color: var(--secondary-teal);
+            margin-right: 4px;
+        }
+
+        .checklist-response {
+            text-align: right;
+            min-width: 90px; /* Reduzido */
+        }
+
+        .item-observacao {
+            font-style: italic;
+            font-size: 0.75em; /* Reduzido */
+            color: var(--medium-text);
+            margin-top: 3px; /* Reduzido */
+            padding-left: 15px; /* Reduzido */
+            position: relative;
+            grid-column: 1 / -1; 
+            page-break-inside: avoid;
+            line-height: 1.3; /* Ajuste fino */
+        }
+        .item-observacao::before {
+            content: "↳";
+            position: absolute;
+            left: 5px; 
+            color: var(--secondary-teal);
+        }
+
+        /* --- Modo de Cor Destacado --- */
+        .modo-cor-item {
+            background-color: rgba(29, 185, 84, 0.05);
+            border-radius: 4px;
+            padding: 6px 8px;
+            border: 1px solid rgba(29, 185, 84, 0.2) !important;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .modo-cor-item .checklist-description {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .modo-cor-item .item-index {
+            color: var(--primary-green);
+            font-weight: 700;
+        }
+
+        .modo-cor-item .status-badge {
+            transform: scale(1.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .modo-cor-item .item-observacao {
+            border-left: 2px solid var(--primary-green);
+            padding-left: 8px;
+            margin-left: 5px;
+            font-style: normal;
+            color: var(--dark-text);
+        }
+
+        .modo-cor-item .item-observacao::before {
+            content: "🎨";
+            position: absolute;
+            left: 0;
+            color: var(--primary-green);
+        }
+
+        /* --- Rodapé --- */
+        .footer {
+            margin-top: 20px; /* Reduzido */
+            text-align: center;
+            font-size: 0.7em; /* Reduzido */
+            color: #999;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px; /* Reduzido */
+            width: 100%;
+        }
+
+        /* --- Botão de Impressão (Tela) --- */
+        .print-button {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: background-color 0.2s ease;
+        }
+
+        .print-button:hover {
+            background-color: #0b5ed7;
+        }
+        
+        .no-print {
+            text-align: center;
+            padding: 10px;
+            background-color: var(--subtle-gray-bg);
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .no-print p {
+            margin: 5px 0 0 0;
+            font-size: 0.9em;
+            color: var(--medium-text);
+        }
+
+        /* --- Estilos de Impressão Otimizados para 1 Página --- */
+        @media print {
+            body {
+                background-color: var(--white);
+                color: #000;
+                font-size: 8pt; /* Ainda menor */
+                line-height: 1.2; /* Mais compacto */
+            }
+            
+            @page {
+                size: A4;
+                margin: 10mm; /* Margens mínimas */
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .container {
+                max-width: 100%;
+                min-height: 0;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+            }
+            
+            .header {
+                border-bottom: 2px solid #000;
+                margin-bottom: 15px; /* Reduzido */
+                padding-bottom: 8px; /* Reduzido */
+            }
+            .header .title-block h1 {
+                 font-size: 18pt; /* Reduzido */
+            }
+             .header .title-block h2 {
+                 font-size: 12pt; /* Reduzido */
+            }
+            .header .title-block h1, .header .title-block h2 {
+                color: #000;
+            }
+            
+            .section {
+                border: 1px solid #ccc;
+                margin-bottom: 5mm; /* Reduzido */
+                page-break-inside: avoid; 
+            }
+            
+            .section-title {
+                color: var(--white) !important; 
+                background-color: var(--secondary-teal) !important; 
+                border-bottom: 1px solid #aaa;
+                padding: 4px 8px; /* Reduzido */
+                font-size: 10pt; /* Reduzido */
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+            
+            .section-content {
+                padding: 8px; /* Reduzido */
+            }
+            
+            .info-grid {
+                 grid-template-columns: 120px 1fr; /* Reduzido */
+                 gap: 2px 8px; /* Reduzido */
+            }
+            .info-label, .info-value {
+                 font-size: 8pt;
+                 line-height: 1.2;
+            }
+            .info-value small {
+                 font-size: 0.9em;
+                 line-height: 1.1;
+            }
+            
+            .status-badge {
+                color: var(--white) !important;
+                padding: 1px 6px; /* Reduzido */
+                font-size: 6.5pt; /* Reduzido */
+                border: none; 
+                 -webkit-print-color-adjust: exact; 
+                 print-color-adjust: exact;
+                 line-height: 1.2;
+            }
+            .status-aprovado, .status-conforme {
+                background-color: var(--status-success) !important;
+            }
+            .status-reprovado, .status-nao-conforme {
+                background-color: var(--status-danger) !important;
+            }
+            .status-pendente, .status-na {
+                background-color: var(--status-warning) !important;
+                color: var(--dark-text) !important; 
+            }
+            .status-enviado {
+                background-color: var(--status-info) !important;
+            }
+            
+            .checklist-item {
+                 margin-bottom: 4px; /* Reduzido */
+                 padding-bottom: 4px; /* Reduzido */
+                 border-bottom: 1px solid #eee; /* Mais leve */
+            }
+             .checklist-item:last-child {
+                 border-bottom: none;
+             }
+            .checklist-description {
+                 font-size: 8pt;
+                 margin-right: 6px;
+                 line-height: 1.2;
+            }
+            .checklist-response {
+                 min-width: 80px; /* Reduzido */
+            }
+            .item-observacao {
+                 font-size: 7pt; /* Reduzido */
+                 margin-top: 2px;
+                 padding-left: 12px;
+                 line-height: 1.2;
+            }
+             .item-observacao::before {
+                 left: 4px;
+             }
+            
+            a {
+                text-decoration: none;
+                color: #000;
+            }
+            
+            .footer {
+                color: #666;
+                font-size: 6pt; /* Reduzido */
+                width: 100%;
+                margin-top: 10px;
+                padding-top: 5px;
+                border-top: 1px solid #ccc;
+            }
+
+            /* Modo de Cor destacado na impressão */
+            .modo-cor-item {
+                background-color: rgba(29, 185, 84, 0.05) !important;
+                border: 1px solid rgba(29, 185, 84, 0.2) !important;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="no-print">
+            <button class="print-button" onclick="window.print()">Imprimir ou Salvar como PDF</button>
+            <p><small>Use as opções do seu navegador para personalizar a impressão (margens, cabeçalhos/rodapés, "Imprimir cores de fundo").</small></p>
+        </div>
+        
+        <div class="report-content">
+            <div class="header">
+                <div class="title-block">
+                    <h1>Relatório de Conferência</h1>
+                    <h2>OS: {{ conferencia.numero_os }}</h2>
+                </div>
+                <div class="logo-placeholder">
+                    <!-- Seu Logo Aqui -->
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Informações Gerais</div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <span class="info-label">Número OS:</span> <span class="info-value">{{ conferencia.numero_os }}</span>
+                        <span class="info-label">Cliente/Projeto:</span> <span class="info-value">{{ conferencia.nome_cliente_projeto or "N/A" }}</span>
+                        <span class="info-label">Arquivo Original:</span> <span class="info-value">{{ conferencia.nome_arquivo_original or "N/A" }}</span>
+                        <span class="info-label">Data Início:</span> <span class="info-value">{{ conferencia.data_inicio_conferencia|datetimeformat }}</span>
+                        <span class="info-label">Data Conclusão:</span> <span class="info-value">{{ conferencia.data_fim_conferencia|datetimeformat if conferencia.data_fim_conferencia else "Em Andamento" }}</span>
+                        <span class="info-label">Status Conferência:</span> 
+                        <span class="info-value">
+                            <span class="status-badge 
+                                {% if conferencia.status_conferencia == "Aprovado" %}status-aprovado
+                                {% elif conferencia.status_conferencia == "Reprovado com Pendências" %}status-reprovado
+                                {% else %}status-pendente{% endif %}">
+                                {{ conferencia.status_conferencia }}
+                            </span>
+                        </span>
+                        <span class="info-label">Responsável:</span> <span class="info-value">{{ conferencia.responsavel.nome_completo }}</span>
+                        <span class="info-label">Status Envio:</span> 
+                        <span class="info-value">
+                            {% if conferencia.envio_faca_cliche %}
+                                <span class="status-badge {% if conferencia.envio_faca_cliche.status_envio == "Enviado" %}status-enviado{% else %}status-pendente{% endif %}">
+                                    {{ conferencia.envio_faca_cliche.status_envio }}
+                                </span>
+                                {% if conferencia.envio_faca_cliche.status_envio == "Enviado" and conferencia.envio_faca_cliche.responsavel_envio %}
+                                    <br><small>por {{ conferencia.envio_faca_cliche.responsavel_envio.nome_completo }} em {{ conferencia.envio_faca_cliche.data_envio|datetimeformat }}</small>
+                                {% endif %}
+                                {% if conferencia.envio_faca_cliche.observacoes_envio %}
+                                    <br><small><em>Obs: {{ conferencia.envio_faca_cliche.observacoes_envio }}</em></small>
+                                {% endif %}
+                            {% else %}
+                                <span class="status-badge status-pendente">Pendente</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Itens de Verificação</div>
+                 <div class="section-content">
+                    {% for item in conferencia.itens_conferencia %}
+                        <div class="checklist-item {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-item{% endif %}">
+                            <div class="checklist-description">
+                                <span class="item-index">{{ loop.index }}.</span> {{ item.descricao_item_checklist }}
+                            </div>
+                            <div class="checklist-response">
+                                <span class="status-badge 
+                                    {% if item.resposta == "Conforme" %}status-conforme
+                                    {% elif item.resposta == "Não Conforme" %}status-nao-conforme
+                                    {% else %}status-na{% endif %}">
+                                    {{ item.resposta or "N/A" }}
+                                </span>
+                            </div>
+                        </div>
+                        {% if item.observacao_item %}
+                            <div class="item-observacao {% if 'MODO DE COR' in item.descricao_item_checklist %}modo-cor-observacao{% endif %}">
+                                {% if 'MODO DE COR' in item.descricao_item_checklist %}
+                                    <strong>Modo de cor utilizado:</strong> {{ item.observacao_item }}
+                                {% else %}
+                                    {{ item.observacao_item }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if conferencia.processos_adicionais %}
+            <div class="section">
+                <div class="section-title">Processos Adicionais</div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <span class="info-label">Montou Boneca:</span> <span class="info-value">{{ conferencia.processos_adicionais.montou_boneca or "N/A" }}</span>
+                        <span class="info-label">Referência de Cor:</span> 
+                        <span class="info-value">
+                            {{ conferencia.processos_adicionais.referencia_cor or "N/A" }}
+                            {% if conferencia.processos_adicionais.referencia_cor == "Outro" and conferencia.processos_adicionais.detalhe_referencia_cor %}
+                                ({{ conferencia.processos_adicionais.detalhe_referencia_cor }})
+                            {% endif %}
+                        </span>
+                        <span class="info-label">Baixa de Chapas:</span> <span class="info-value">{{ conferencia.processos_adicionais.deu_baixa_chapas or "N/A" }}</span>
+                        <span class="info-label">Apontamento no Sistema:</span> <span class="info-value">{{ conferencia.processos_adicionais.fez_apontamento_sistema or "N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if conferencia.observacoes_gerais %}
+            <div class="section">
+                <div class="section-title">Observações Gerais</div>
+                <div class="section-content">
+                    <div class="info-value">{{ conferencia.observacoes_gerais }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            Relatório gerado em {% if now %}{{ now|datetimeformat }}{% else %}{{ conferencia.data_inicio_conferencia|datetimeformat }}{% endif %} | Feita por Leonardo Designer
+        </div>
+    </div>
+</body>
+</html>

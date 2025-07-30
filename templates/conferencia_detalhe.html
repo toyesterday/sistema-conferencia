@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Conferência O.S. {{ conferencia.numero_os }} - Sistema de Conferência{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Detalhes da Conferência - O.S. {{ conferencia.numero_os }}</h2>
+    <hr>
+
+    <div class="mb-3">
+        <a href="{{ url_for('gerar_pdf_conferencia', id_conferencia=conferencia.id_conferencia) }}" class="btn btn-primary" target="_blank">Gerar PDF do Relatório</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar para Lista</a>
+    </div>
+
+    <h4>Dados Gerais da Conferência</h4>
+    <table class="table table-bordered table-striped">
+        <tbody>
+            <tr>
+                <th scope="row" style="width: 25%;">Número da O.S.</th>
+                <td>{{ conferencia.numero_os }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Cliente/Projeto</th>
+                <td>{{ conferencia.nome_cliente_projeto if conferencia.nome_cliente_projeto else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Nome do Arquivo Original</th>
+                <td>{{ conferencia.nome_arquivo_original if conferencia.nome_arquivo_original else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Responsável</th>
+                <td>{{ conferencia.responsavel.nome_completo }} ({{ conferencia.responsavel.nome_usuario }})</td>
+            </tr>
+            <tr>
+                <th scope="row">Data de Início</th>
+                <td>{{ conferencia.data_inicio_conferencia|datetimeformat }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Data de Finalização</th>
+                <td>{{ conferencia.data_fim_conferencia|datetimeformat if conferencia.data_fim_conferencia else 'Em Andamento' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Status</th>
+                <td class="{% if conferencia.status_conferencia == 'Reprovado com Pendências'%}text-danger font-weight-bold{% elif conferencia.status_conferencia == 'Aprovado'%}text-success font-weight-bold{% endif %}">
+                    {{ conferencia.status_conferencia }}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Status de Envio (Faca/Clichê/Fotolito)</th>
+                <td>
+                    {% if conferencia.envio_faca_cliche %}
+                        <span class="{% if conferencia.envio_faca_cliche.status_envio == 'Enviado'%}text-success font-weight-bold{% else %}text-warning font-weight-bold{% endif %}">
+                            {{ conferencia.envio_faca_cliche.status_envio }}
+                        </span>
+                        {% if conferencia.envio_faca_cliche.status_envio == 'Enviado' and conferencia.envio_faca_cliche.responsavel_envio %}
+                            <br><small>por {{ conferencia.envio_faca_cliche.responsavel_envio.nome_completo }} em {{ conferencia.envio_faca_cliche.data_envio|datetimeformat }}</small>
+                        {% endif %}
+                        {% if conferencia.envio_faca_cliche.observacoes_envio %}
+                            <br><small><em>Observações: {{ conferencia.envio_faca_cliche.observacoes_envio }}</em></small>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-warning font-weight-bold">Pendente</span>
+                    {% endif %}
+                    
+                    {% if usuario.perfil == 'responsavel_envio' or usuario.perfil == 'supervisor' %}
+                    <br>
+                    <button type="button" class="btn btn-sm btn-primary mt-2" data-toggle="modal" data-target="#modalEnvio">
+                        Atualizar Status de Envio
+                    </button>
+                    
+                    <!-- Modal para atualizar status de envio -->
+                    <div class="modal fade" id="modalEnvio" tabindex="-1" role="dialog" aria-labelledby="modalEnvioLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalEnvioLabel">Atualizar Status de Envio - O.S. {{ conferencia.numero_os }}</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <form action="{{ url_for('atualizar_status_envio', id_conferencia=conferencia.id_conferencia) }}" method="POST">
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label for="status_envio">Status do Envio:</label>
+                                            <select class="form-control" id="status_envio" name="status_envio" required>
+                                                <option value="Pendente" {% if not conferencia.envio_faca_cliche or conferencia.envio_faca_cliche.status_envio == 'Pendente' %}selected{% endif %}>Pendente</option>
+                                                <option value="Enviado" {% if conferencia.envio_faca_cliche and conferencia.envio_faca_cliche.status_envio == 'Enviado' %}selected{% endif %}>Enviado</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="observacoes_envio">Observações:</label>
+                                            <textarea class="form-control" id="observacoes_envio" name="observacoes_envio" rows="3">{{ conferencia.envio_faca_cliche.observacoes_envio if conferencia.envio_faca_cliche else '' }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary">Salvar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 class="mt-4">Checklist de Conferência</h4>
+    {% for item in conferencia.itens_conferencia %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>{{ loop.index }}. {{ item.descricao_item_checklist }}</strong>
+        </div>
+        <div class="card-body">
+            <p class="card-text">Resposta: 
+                <span class="{% if item.resposta == 'Não Conforme'%}text-danger font-weight-bold{% elif item.resposta == 'Conforme'%}text-success{% else %}text-muted{% endif %}">
+                    {{ item.resposta if item.resposta else 'Não respondido' }}
+                </span>
+            </p>
+            {% if item.observacao_item %}
+            <p class="card-text"><em>Observações: {{ item.observacao_item }}</em></p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if conferencia.processos_adicionais %}
+    <h4 class="mt-4">Processos Adicionais</h4>
+    <table class="table table-bordered table-striped">
+        <tbody>
+            <tr>
+                <th scope="row" style="width: 35%;">Foi montado boneca?</th>
+                <td>{{ conferencia.processos_adicionais.montou_boneca if conferencia.processos_adicionais.montou_boneca else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Formato de cor para referência?</th>
+                <td>
+                    {{ conferencia.processos_adicionais.referencia_cor if conferencia.processos_adicionais.referencia_cor else 'N/A' }}
+                    {% if conferencia.processos_adicionais.referencia_cor == 'Outro' and conferencia.processos_adicionais.detalhe_referencia_cor %}
+                        ({{ conferencia.processos_adicionais.detalhe_referencia_cor }})
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Deu baixa nas chapas?</th>
+                <td>{{ conferencia.processos_adicionais.deu_baixa_chapas if conferencia.processos_adicionais.deu_baixa_chapas else 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Fez apontamento de gravação no sistema?</th>
+                <td>{{ conferencia.processos_adicionais.fez_apontamento_sistema if conferencia.processos_adicionais.fez_apontamento_sistema else 'N/A' }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if conferencia.observacoes_gerais %}
+    <h4 class="mt-4">Observações Gerais da Conferência</h4>
+    <div class="card">
+        <div class="card-body">
+            <p class="card-text">{{ conferencia.observacoes_gerais }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
