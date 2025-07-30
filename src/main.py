@@ -16,26 +16,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "supersecretkey"
 
-# Tentar conectar ao Supabase primeiro, com fallback para SQLite
-try:
-    import psycopg2
-    # Testar conexão com Supabase
-    test_conn = psycopg2.connect(
-        host="db.gpdusrhokctnctteocjw.supabase.co",
-        database="postgres",
-        user="postgres",
-        password="937146",
-        port="5432"
-    )
-    test_conn.close()
-    
-    # Se chegou até aqui, Supabase está disponível
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:937146@db.gpdusrhokctnctteocjw.supabase.co:5432/postgres"
-    logger.info("Usando banco de dados Supabase (PostgreSQL)")
-    
-except Exception as e:
-    # Fallback para SQLite se Supabase não estiver disponível
-    logger.warning(f"Supabase não disponível ({e}), usando SQLite como fallback")
+# Configurar banco de dados usando DATABASE_URL das variáveis de ambiente
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    # Usar a DATABASE_URL fornecida (Supabase ou outro PostgreSQL)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    logger.info("Usando banco de dados PostgreSQL da variável de ambiente DATABASE_URL")
+else:
+    # Fallback para SQLite apenas em desenvolvimento local
+    logger.warning("DATABASE_URL não encontrada, usando SQLite como fallback")
     db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'database.db')
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -356,30 +345,21 @@ def nova_conferencia():
             )
             db.session.add(proc_add)
             
-            # Adicionar observações gerais
+            # Observações gerais
             nova_conf.observacoes_gerais = request.form.get("observacoes_gerais")
             
-            # Commit para salvar tudo no banco de dados
+            # Commit final
             db.session.commit()
+            logger.info(f"Conferência {id_conferencia_gerado} criada com sucesso")
             
-            # Verificar se a conferência foi realmente salva
-            conferencia_salva = Conferencia.query.get(id_conferencia_gerado)
-            if conferencia_salva:
-                logger.info(f"Conferência salva com sucesso. ID: {id_conferencia_gerado}")
-                flash(f"Conferência para O.S. {numero_os} salva com sucesso! ID: {id_conferencia_gerado}", "success")
-                # Garantir que estamos usando o ID armazenado para o redirecionamento
-                return redirect(url_for("visualizar_conferencia", id_conferencia=id_conferencia_gerado))
-            else:
-                logger.error(f"Conferência não encontrada após commit. ID esperado: {id_conferencia_gerado}")
-                flash("Erro: A conferência foi salva, mas não foi possível acessá-la. Por favor, verifique na lista de conferências.", "warning")
-                return redirect(url_for("index"))
-                
+            flash("Conferência criada com sucesso!", "success")
+            return redirect(url_for("visualizar_conferencia", id_conferencia=id_conferencia_gerado))
+            
         except Exception as e:
-            logger.error(f"Erro ao salvar conferência: {str(e)}")
+            logger.error(f"Erro ao criar conferência: {e}")
             db.session.rollback()
-            flash(f"Erro ao salvar conferência: {str(e)}", "danger")
-            return redirect(url_for("index"))
-
+            flash(f"Erro ao criar conferência: {str(e)}", "danger")
+    
     return render_template("nova_conferencia.html", checklist_items=CHECKLIST_ITEMS, usuario=usuario)
 
 @app.route("/conferencia/<int:id_conferencia>")
@@ -387,67 +367,39 @@ def visualizar_conferencia(id_conferencia):
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    try:
-        # Buscar a conferência com tratamento de erro amigável
-        logger.info(f"Buscando conferência com ID: {id_conferencia}")
-        conferencia = Conferencia.query.get(id_conferencia)
-        
-        # Se a conferência não existir, exibir mensagem amigável
-        if not conferencia:
-            logger.warning(f"Conferência com ID {id_conferencia} não encontrada")
-            flash(f"A conferência com ID {id_conferencia} não foi encontrada. Por favor, crie uma nova conferência ou selecione uma existente.", "warning")
-            return redirect(url_for("index"))
-        
-        if conferencia.id_usuario_responsavel != session["user_id"]:
-            logger.warning(f"Usuário {session['user_id']} tentou acessar conferência {id_conferencia} de outro usuário")
-            flash("Você não tem permissão para ver esta conferência.", "danger")
-            return redirect(url_for("index"))
-        
-        # Buscar o usuário atual para passar ao template
-        usuario = Usuario.query.get(session["user_id"])
-        
-        logger.info(f"Conferência {id_conferencia} encontrada e exibida com sucesso")
-        return render_template("conferencia_detalhe.html", conferencia=conferencia, usuario=usuario)
-    except Exception as e:
-        logger.error(f"Erro ao visualizar conferência {id_conferencia}: {str(e)}")
-        flash(f"Erro ao visualizar conferência: {str(e)}", "danger")
+    conferencia = Conferencia.query.get_or_404(id_conferencia)
+    
+    # Verificar se o usuário tem permissão para ver esta conferência
+    if conferencia.id_usuario_responsavel != session["user_id"]:
+        flash("Você não tem permissão para visualizar esta conferência.", "danger")
         return redirect(url_for("index"))
+    
+    # Buscar o usuário atual para passar ao template
+    usuario = Usuario.query.get(session["user_id"])
+    
+    return render_template("conferencia_detalhe.html", conferencia=conferencia, usuario=usuario)
 
-
-
-@app.route("/conferencia/<int:id_conferencia>/pdf")
-def gerar_pdf_conferencia(id_conferencia):
+@app.route("/relatorio_pdf/<int:id_conferencia>")
+def relatorio_pdf(id_conferencia):
     if "user_id" not in session:
         return redirect(url_for("login"))
     
-    try:
-        # Buscar a conferência com tratamento de erro amigável
-        conferencia = Conferencia.query.get(id_conferencia)
-        
-        # Se a conferência não existir, exibir mensagem amigável
-        if not conferencia:
-            flash(f"A conferência com ID {id_conferencia} não foi encontrada. Por favor, crie uma nova conferência ou selecione uma existente.", "warning")
-            return redirect(url_for("index"))
-        
-        if conferencia.id_usuario_responsavel != session["user_id"]:
-            flash("Você não tem permissão para gerar relatório desta conferência.", "danger")
-            return redirect(url_for("index"))
-        
-        # Buscar o usuário atual para passar ao template
-        usuario = Usuario.query.get(session["user_id"])
-        
-        # Renderizar template HTML para impressão
-        return render_template("relatorio_conferencia_impressao.html", 
-                            conferencia=conferencia, 
-                            now=datetime.datetime.now(),
-                            modo_impressao=True,
-                            usuario=usuario)
-    except Exception as e:
-        logger.error(f"Erro ao gerar PDF da conferência {id_conferencia}: {str(e)}")
-        flash(f"Erro ao gerar relatório: {str(e)}", "danger")
+    conferencia = Conferencia.query.get_or_404(id_conferencia)
+    
+    # Verificar se o usuário tem permissão para ver esta conferência
+    if conferencia.id_usuario_responsavel != session["user_id"]:
+        flash("Você não tem permissão para visualizar esta conferência.", "danger")
         return redirect(url_for("index"))
+    
+    # Renderizar o template HTML para impressão
+    html_content = render_template("relatorio_conferencia_impressao.html", conferencia=conferencia)
+    
+    # Criar resposta HTTP com o HTML
+    response = make_response(html_content)
+    response.headers['Content-Type'] = 'text/html'
+    
+    return response
 
-# Nova rota para a biblioteca de defeitos
 @app.route("/biblioteca_defeitos")
 def biblioteca_defeitos():
     if "user_id" not in session:
@@ -456,29 +408,18 @@ def biblioteca_defeitos():
     # Buscar o usuário atual para passar ao template
     usuario = Usuario.query.get(session["user_id"])
     
-    # Aqui poderia buscar defeitos do banco de dados se implementado
-    # defeitos = DefeitoComum.query.all()
+    # Buscar todos os defeitos, organizados por categoria
+    defeitos = DefeitoComum.query.order_by(DefeitoComum.categoria, DefeitoComum.titulo).all()
     
-    return render_template("biblioteca_defeitos.html", usuario=usuario)
-
-# Rota para verificar o status do banco de dados
-@app.route("/check_db")
-def check_db():
-    try:
-        # Tentar inicializar o banco de dados
-        inicializar_banco_dados()
-        
-        # Verificar se o usuário admin existe
-        admin = Usuario.query.filter_by(nome_usuario='admin').first()
-        if admin:
-            return f"Banco de dados OK. Usuário admin encontrado (ID: {admin.id_usuario})."
-        else:
-            return "Banco de dados inicializado, mas usuário admin não encontrado."
-    except Exception as e:
-        return f"Erro ao verificar banco de dados: {str(e)}"
+    # Organizar defeitos por categoria
+    defeitos_por_categoria = {}
+    for defeito in defeitos:
+        if defeito.categoria not in defeitos_por_categoria:
+            defeitos_por_categoria[defeito.categoria] = []
+        defeitos_por_categoria[defeito.categoria].append(defeito)
+    
+    return render_template("biblioteca_defeitos.html", defeitos_por_categoria=defeitos_por_categoria, usuario=usuario)
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        inicializar_banco_dados()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
+
